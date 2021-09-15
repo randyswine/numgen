@@ -7,6 +7,8 @@ import (
 	"sync"
 )
 
+// printer агрегирует все уникальные поступающие от генераторов случайные числа,
+// и выводит их в консоль.
 type printer struct {
 	storage []int
 	lim     int64
@@ -15,6 +17,7 @@ type printer struct {
 	state   control.State
 }
 
+// New возвращает ссылку на новый экземпляр принтера случайных чисел.
 func New(lim int64, cmds <-chan control.Cmd, nums <-chan int) *printer {
 	if lim <= 0 {
 		panic(fmt.Errorf("don't use value 0 of limit"))
@@ -26,18 +29,13 @@ func New(lim int64, cmds <-chan control.Cmd, nums <-chan int) *printer {
 	}
 }
 
+// Run запускает основной рабочий цикл Printer.
 func (p *printer) Run(wg *sync.WaitGroup) {
 	for {
 		select {
 		case cmd := <-p.cmds:
-			switch cmd {
-			case control.Start:
-				p.state = control.Worked
-			case control.Stop:
-				p.state = control.Waiting
-			case control.Destroy:
-				wg.Done()
-				fmt.Println()
+			p.handleCommand(cmd)
+			if cmd == control.Destroy {
 				return
 			}
 		case n := <-p.nums:
@@ -52,6 +50,20 @@ func (p *printer) Run(wg *sync.WaitGroup) {
 	}
 }
 
+// handleCommand выполняет обработку поступающих команд и управляет тикером генерации чисел.
+func (p *printer) handleCommand(cmd control.Cmd) {
+	switch cmd {
+	case control.Start:
+		p.state = control.Worked
+	case control.Stop:
+		p.state = control.Waiting
+
+	case control.Destroy:
+		p.state = control.Waiting
+	}
+}
+
+// hasNum возвращает true, если входящее от генератора число уже было получено ранее.
 func (p *printer) hasNum(n int) bool {
 	for _, val := range p.storage {
 		if n == val {
