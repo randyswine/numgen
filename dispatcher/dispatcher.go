@@ -11,6 +11,8 @@ type component struct {
 	feedback <-chan control.Signal
 }
 
+var instance *dispatcher
+
 // dispatcher управляет рабочими циклами генераторов случайных чисел и принтера.
 type dispatcher struct {
 	generators []component // Коллекция служебных каналов генераторов случайных чисел.
@@ -18,8 +20,11 @@ type dispatcher struct {
 }
 
 // New возвращает экземпляр диспетчера компонетов.
-func New() *dispatcher {
-	return &dispatcher{}
+func Dispatcher() *dispatcher {
+	if instance == nil {
+		instance = &dispatcher{}
+	}
+	return instance
 }
 
 // AppendGenerator добавляет служебные каналы генератора в коллекцию.
