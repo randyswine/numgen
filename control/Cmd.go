@@ -12,4 +12,5 @@ type Signal string
 
 const (
 	Success Signal = "success"
+	Fail    Signal = "fail"
 )

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"numgen/control"
 	"sort"
-	"sync"
 )
 
 // printer агрегирует все уникальные поступающие от генераторов случайные числа,
@@ -30,7 +29,7 @@ func New(lim int64, cmds <-chan control.Cmd, nums <-chan int) *printer {
 }
 
 // Run запускает основной рабочий цикл Printer.
-func (p *printer) Run(wg *sync.WaitGroup) {
+func (p *printer) Run() {
 	for {
 		select {
 		case cmd := <-p.cmds:
