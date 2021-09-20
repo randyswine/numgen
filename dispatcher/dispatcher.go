@@ -41,6 +41,11 @@ func (d *dispatcher) AppendPrinter(control chan<- control.Cmd, feedback <-chan c
 // об успешном запуске.
 func (d *dispatcher) StartAll() {
 	var result control.Signal
+	d.printer.control <- control.Start
+	result = <-d.printer.feedback
+	if result != control.Success {
+		panic(fmt.Errorf("ошибка старта принтера случайных чисел"))
+	}
 	for _, generator := range d.generators {
 		generator.control <- control.Start
 		result = <-generator.feedback
