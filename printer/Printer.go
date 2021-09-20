@@ -16,10 +16,11 @@ type printer struct {
 	feedback chan<- control.Signal // Обратная связь принтера (см. dispatcher).
 	nums     <-chan int            // Сгенерированное число читается из nums.
 	state    control.State         // Состояние принтера. Влияет на рабочий цикл.
+	result   chan<- control.Signal
 }
 
 // New возвращает ссылку на новый экземпляр принтера случайных чисел.
-func New(lim int64, cmds <-chan control.Cmd, feedback chan<- control.Signal, nums <-chan int) *printer {
+func New(lim int64, cmds <-chan control.Cmd, feedback chan<- control.Signal, nums <-chan int, result chan<- control.Signal) *printer {
 	if lim <= 0 {
 		panic(fmt.Errorf("don't use value 0 of limit"))
 	}
@@ -28,6 +29,7 @@ func New(lim int64, cmds <-chan control.Cmd, feedback chan<- control.Signal, num
 		cmds:     cmds,
 		feedback: feedback,
 		nums:     nums,
+		result:   result,
 	}
 }
 
@@ -47,6 +49,10 @@ func (p *printer) Run(wg *sync.WaitGroup) {
 					p.storage = append(p.storage, n)
 					sort.IntSlice(p.storage).Sort()
 					fmt.Printf("\rTotal: %v", p.storage)
+					if len(p.storage) == int(p.lim) {
+						fmt.Println()
+						p.result <- control.Success
+					}
 				}
 			}
 		}

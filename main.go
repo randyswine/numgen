@@ -33,13 +33,24 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	initComponents(&wg)
+	// Инициализация всех компонентов.
+	result := initComponents(&wg)
+	// Старт всех компонентов (генерация и вывод чисел).
 	dispatcher.Dispatcher().StartAll()
+	// Ожидание генерации заданного количества чисел.
+	signal := <-result
+	if signal != control.Success {
+		os.Exit(1)
+	}
+	// Остановка генерации и вывода чисел.
+	dispatcher.Dispatcher().StopAll()
+	// Завершение рабочих циклов генераторов и принтера чисел.
+	dispatcher.Dispatcher().DestroyAll()
 	wg.Wait()
 	os.Exit(0)
 }
 
-func initComponents(wg *sync.WaitGroup) {
+func initComponents(wg *sync.WaitGroup) <-chan control.Signal {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Component initalize error: %v\r\n", r)
@@ -51,7 +62,8 @@ func initComponents(wg *sync.WaitGroup) {
 	printerCmd := make(chan control.Cmd, 1)
 	printerFeedback := make(chan control.Signal, 1)
 	nums := make(chan int, flowCount)
-	printer := printer.New(limit, printerCmd, printerFeedback, nums)
+	printerResult := make(chan control.Signal, 1)
+	printer := printer.New(limit, printerCmd, printerFeedback, nums, printerResult)
 	// Передача служебных каналов принтера диспетчеру.
 	dispatcher.AppendPrinter(printerCmd, printerFeedback)
 	// Старт рабочего цикла принтера.
@@ -68,4 +80,5 @@ func initComponents(wg *sync.WaitGroup) {
 		wg.Add(1)
 		go generator.Run(wg)
 	}
+	return printerResult
 }

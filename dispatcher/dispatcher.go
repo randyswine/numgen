@@ -84,7 +84,7 @@ func (d *dispatcher) DestroyAll() {
 			panic(fmt.Errorf("ошибка завершения рабочего цикла генератора случайных чисел"))
 		}
 	}
-	d.printer.control <- control.Stop
+	d.printer.control <- control.Destroy
 	result = <-d.printer.feedback
 	if result != control.Success {
 		panic(fmt.Errorf("ошибка завершения рабочего цикла принтера случайных чисел"))
