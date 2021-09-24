@@ -18,13 +18,7 @@ var (
 	timeout   int64 // Таймаут генерации случайного числа.
 )
 
-func main() {
-	var wg sync.WaitGroup
-	defer func() {
-		if r := recover(); r != nil {
-			os.Exit(1)
-		}
-	}()
+func init() {
 	flag.IntVar(&flowCount, "flowcount", 0, "Numbers of threads generating random numbers")
 	flag.Int64Var(&limit, "limit", 0, "Maximum random number. Affects the number of generated numbers (from 0 to limit).")
 	flag.Int64Var(&timeout, "timeout", 0, "Timeout for generating a random number.")
@@ -33,6 +27,15 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
+}
+
+func main() {
+	var wg sync.WaitGroup
+	defer func() {
+		if r := recover(); r != nil {
+			os.Exit(1)
+		}
+	}()
 	// Инициализация всех компонентов.
 	result := initComponents(&wg)
 	// Старт всех компонентов (генерация и вывод чисел).
